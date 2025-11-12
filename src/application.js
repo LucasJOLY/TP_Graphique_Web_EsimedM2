@@ -21,6 +21,7 @@ export class Application {
     this.selectionMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00 });
     this.raycaster = new Raycaster();
     this.pointer = new Vector2();
+    this.moveSelectedObject = false;
 
     this.initParams(sun);
 
@@ -33,6 +34,12 @@ export class Application {
     );
     this.ui.addSunUI(this.sunParams, this.scene.changeSun.bind(this.scene));
     this.ui.createSelectionUI();
+    this.setupImportInput();
+    this.ui.addSceneManagement(
+      this.exportScene.bind(this),
+      this.handleClearScene.bind(this),
+      this.triggerImportScene.bind(this)
+    );
 
     this.scene.addSkybox(this.skyboxParams.file);
     this.scene.addGround(this.groundParams.texture, this.groundParams.repeats);
@@ -45,7 +52,11 @@ export class Application {
     this.renderer.setAnimationLoop(this.render.bind(this));
 
     this.onClick = this.onClick.bind(this);
+    this.onKeyDown = this.onKeyDown.bind(this);
+    this.onMouseMove = this.onMouseMove.bind(this);
     window.addEventListener('click', this.onClick);
+    window.addEventListener('keydown', this.onKeyDown);
+    window.addEventListener('mousemove', this.onMouseMove);
   }
 
   initParams(sun) {
@@ -137,5 +148,50 @@ export class Application {
     this.selectedMesh = null;
     this.selectedMeshMaterial = null;
     this.ui.hideSelection();
+  }
+
+  onKeyDown(event) {
+    if (event.key.toLowerCase() === 'g') {
+      this.moveSelectedObject = !this.moveSelectedObject;
+    }
+  }
+
+  onMouseMove(event) {
+    if (!this.selectedObject || !this.moveSelectedObject) {
+      return;
+    }
+
+    const rect = this.renderer.domElement.getBoundingClientRect();
+    this.pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    this.pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+    this.raycaster.setFromCamera(this.pointer, this.camera);
+
+    const intersects = this.raycaster.intersectObject(this.scene.ground ?? this.scene, true);
+    const groundHit = intersects.find(
+      (intersect) => intersect.object === this.scene.ground || intersect.object?.userData?.isGround
+    );
+
+    if (!groundHit) {
+      return;
+    }
+
+    this.selectedObject.position.copy(groundHit.point);
+    this.ui.showSelection({
+      name: this.selectedObject.name ?? '--',
+      position: this.selectedObject.position
+        .toArray()
+        .map((v) => v.toFixed(2))
+        .join(', '),
+      rotation: this.selectedObject.rotation
+        .toArray()
+        .slice(0, 3)
+        .map((v) => v.toFixed(2))
+        .join(', '),
+      scale: this.selectedObject.scale
+        .toArray()
+        .map((v) => v.toFixed(2))
+        .join(', '),
+    });
   }
 }

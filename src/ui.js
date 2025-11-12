@@ -6,55 +6,55 @@ export class UI {
   }
 
   addSkyboxUI(files, params, onChange) {
-    const folder = this.gui.addFolder('Skybox');
-    folder
+    this.skyboxFolder = this.gui.addFolder('Skybox');
+    this.skyboxController = this.skyboxFolder
       .add(params, 'file', files)
       .name('Fichier')
       .onChange((value) => {
         params.file = value;
         onChange(value);
       });
-    folder.open();
+    this.skyboxFolder.open();
   }
 
   addGroundUI(files, params, onChange) {
-    const folder = this.gui.addFolder('Ground');
-    folder
+    this.groundFolder = this.gui.addFolder('Ground');
+    this.groundTextureController = this.groundFolder
       .add(params, 'texture', files)
       .name('Texture')
       .onChange((value) => {
         params.texture = value;
         onChange(params.texture, params.repeats);
       });
-    folder
+    this.groundRepeatsController = this.groundFolder
       .add(params, 'repeats', 1, 1000, 1)
       .name('Répétitions')
       .onChange((value) => {
         params.repeats = value;
         onChange(params.texture, params.repeats);
       });
-    folder.open();
+    this.groundFolder.open();
   }
 
   addSunUI(params, onChange) {
-    const folder = this.gui.addFolder('Sun');
-    folder
+    this.sunFolder = this.gui.addFolder('Sun');
+    this.sunColorController = this.sunFolder
       .addColor(params, 'color')
       .name('Couleur')
       .onChange(() => onChange(params));
-    folder
+    this.sunIntensityController = this.sunFolder
       .add(params, 'intensity', 0, 10, 0.1)
       .name('Intensité')
       .onChange(() => onChange(params));
-    folder
+    this.sunXController = this.sunFolder
       .add(params, 'x', -200, 200, 1)
       .name('Position X')
       .onChange(() => onChange(params));
-    folder
+    this.sunZController = this.sunFolder
       .add(params, 'z', -200, 200, 1)
       .name('Position Z')
       .onChange(() => onChange(params));
-    folder.open();
+    this.sunFolder.open();
   }
 
   createSelectionUI() {
@@ -96,5 +96,47 @@ export class UI {
     });
     this.selectionFolder.controllers.forEach((controller) => controller.updateDisplay());
     this.selectionFolder.domElement.style.display = 'none';
+  }
+
+  addSceneManagement(onExport, onClear, onImport) {
+    const folder = this.gui.addFolder('Scene');
+    const actions = {
+      exportScene: () => onExport(),
+      clearScene: () => onClear(),
+      importScene: () => onImport(),
+    };
+    folder.add(actions, 'exportScene').name('Export Scene');
+    folder.add(actions, 'clearScene').name('Clear Scene');
+    folder.add(actions, 'importScene').name('Import Scene');
+  }
+
+  updateSkyboxUI() {
+    if (this.skyboxController) {
+      this.skyboxController.updateDisplay();
+    }
+  }
+
+  updateGroundUI() {
+    if (this.groundTextureController) {
+      this.groundTextureController.updateDisplay();
+    }
+    if (this.groundRepeatsController) {
+      this.groundRepeatsController.updateDisplay();
+    }
+  }
+
+  updateSunUI() {
+    if (this.sunColorController) {
+      this.sunColorController.updateDisplay();
+    }
+    if (this.sunIntensityController) {
+      this.sunIntensityController.updateDisplay();
+    }
+    if (this.sunXController) {
+      this.sunXController.updateDisplay();
+    }
+    if (this.sunZController) {
+      this.sunZController.updateDisplay();
+    }
   }
 }
